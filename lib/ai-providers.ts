@@ -867,6 +867,8 @@ export function getAIModel(overrides?: ClientOverrides): ModelConfig {
         }
 
         case "deepseek": {
+            // DeepSeek provider also supports GLM-4.7 and other models with reasoning_content field
+            // because they use the same response format
             const apiKey = resolveApiKey(overrides, "DEEPSEEK_API_KEY")
             const serverBaseUrl = resolveBaseUrlEnv(
                 overrides,
@@ -968,8 +970,20 @@ export function getAIModel(overrides?: ClientOverrides): ModelConfig {
                                             if (delta.role === "") {
                                                 delete delta.role
                                             }
-                                            // Fix 2: remove non-standard reasoning_content field
+                                            // Fix 2: Convert reasoning_content to reasoning field (for GLM-4.7 and similar models)
                                             if ("reasoning_content" in delta) {
+                                                // When reasoning_content is not null, it contains the reasoning text
+                                                // Map it to the standard 'reasoning' field for AI SDK 6 compatibility
+                                                if (delta.reasoning_content !== null && !delta.reasoning) {
+                                                    delta.reasoning = delta.reasoning_content
+                                                }
+                                                // Debug log for GLM reasoning
+                                                if (delta.reasoning !== undefined || delta.reasoning_content !== undefined) {
+                                                    console.log(
+                                                        `[SGLang] reasoning_content="${delta.reasoning_content}", reasoning="${delta.reasoning}"`,
+                                                    )
+                                                }
+                                                // Always remove the non-standard reasoning_content field
                                                 delete delta.reasoning_content
                                             }
                                         }
