@@ -449,6 +449,11 @@ export function ChatMessageDisplay({
                                 return // Skip redundant processing
                             }
 
+                            // Debug log to track streaming behavior
+                            console.log(
+                                `[Diagram Streaming] toolCallId=${toolCallId}, state=${state}, xmlLength=${xml.length}, hasReasoning=${message.parts?.some((p) => p.type === "reasoning")}`,
+                            )
+
                             if (
                                 state === "input-streaming" ||
                                 state === "input-available"
