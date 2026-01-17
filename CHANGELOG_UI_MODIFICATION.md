@@ -324,6 +324,12 @@ case "deepseek": {
 - Empty or whitespace-only base URLs are treated as "not provided" and fall back to defaults
 - All API calls are now made through `createDeepSeek()` with explicit base URL (no more default SDK behavior)
 
+---
+
+6. #### `lib/i18n/dictionaries/zh.json`
+
+- 修改了一些配置
+
 ### User Experience Changes
 
 **Before**:
