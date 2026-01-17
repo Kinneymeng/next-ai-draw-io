@@ -76,7 +76,10 @@ export const PROVIDER_INFO: Record<
     azure: { label: "Azure OpenAI" },
     bedrock: { label: "Amazon Bedrock" },
     openrouter: { label: "OpenRouter" },
-    deepseek: { label: "CaTianshu" },
+    deepseek: {
+        label: "CaTianshu",
+        defaultBaseUrl: "http://ai.sda.changan.com.cn/api/v1",
+    },
     siliconflow: {
         label: "SiliconFlow",
         defaultBaseUrl: "https://api.siliconflow.com/v1",

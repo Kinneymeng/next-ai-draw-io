@@ -237,3 +237,169 @@ next-ai-draw-io/
 6. Check browser DevTools Network tab to confirm image loads from `/changan.png`
 7. Test with slow network to ensure image loading doesn't break UI
 8. Verify alt text "CaTianshu logo" appears if image fails to load
+
+---
+
+## Date: 2026-01-17 (Update 4)
+
+### Summary
+Added default base URL for CaTianshu (DeepSeek) provider to automatically use Changan Tianshu API endpoint. The base URL field now displays `http://ai.sda.changan.com.cn/api/v1` as placeholder and default value, and API requests will use this URL unless the user provides a custom one.
+
+### Files Modified
+
+#### 5. `lib/types/model-config.ts`
+
+**Location**: Lines 79-82
+
+**Change Description**:
+- **Before**: CaTianshu provider had no default base URL configured
+- **After**: CaTianshu provider now has default base URL: `http://ai.sda.changan.com.cn/api/v1`
+
+**Code Changes**:
+```typescript
+// Before:
+deepseek: { label: "CaTianshu" },
+
+// After:
+deepseek: {
+    label: "CaTianshu",
+    defaultBaseUrl: "http://ai.sda.changan.com.cn/api/v1",
+},
+```
+
+**Impact**:
+- When users create a new CaTianshu provider, the base URL field is pre-filled with the default value
+- The base URL input field shows `http://ai.sda.changan.com.cn/api/v1` as placeholder text
+- This value is automatically saved to the provider configuration during creation
+
+#### 6. `lib/ai-providers.ts`
+
+**Location**: Lines 697-710
+
+**Change Description**:
+- **Before**: Used official DeepSeek API endpoint when no base URL was provided
+- **After**: Always uses Changan Tianshu endpoint (`http://ai.sda.changan.com.cn/api/v1`) as fallback
+
+**Code Changes**:
+```typescript
+// Before:
+case "deepseek": {
+    const apiKey = overrides?.apiKey || process.env.DEEPSEEK_API_KEY
+    const baseURL = overrides?.baseUrl || process.env.DEEPSEEK_BASE_URL
+    if (baseURL || overrides?.apiKey) {
+        const customDeepSeek = createDeepSeek({
+            apiKey,
+            ...(baseURL && { baseURL }),
+        })
+        model = customDeepSeek(modelId)
+    } else {
+        model = deepseek(modelId)
+    }
+    break
+}
+
+// After:
+case "deepseek": {
+    const apiKey = overrides?.apiKey || process.env.DEEPSEEK_API_KEY
+    // Use default baseURL if not provided or empty
+    const baseURL =
+        (overrides?.baseUrl && overrides.baseUrl.trim()) ||
+        process.env.DEEPSEEK_BASE_URL ||
+        "http://ai.sda.changan.com.cn/api/v1"
+    const customDeepSeek = createDeepSeek({
+        apiKey,
+        baseURL,
+    })
+    model = customDeepSeek(modelId)
+    break
+}
+```
+
+**Impact**:
+- API requests from CaTianshu provider now always use a base URL (never undefined)
+- Priority order for base URL selection:
+  1. User-provided base URL (from UI input field, if not empty)
+  2. Environment variable `DEEPSEEK_BASE_URL` (if set)
+  3. Default Changan Tianshu endpoint: `http://ai.sda.changan.com.cn/api/v1`
+- Empty or whitespace-only base URLs are treated as "not provided" and fall back to defaults
+- All API calls are now made through `createDeepSeek()` with explicit base URL (no more default SDK behavior)
+
+### User Experience Changes
+
+**Before**:
+- Base URL field was empty when creating a new CaTianshu provider
+- Users had to manually enter the Changan Tianshu API endpoint
+- If left empty, requests would go to official DeepSeek API
+
+**After**:
+- Base URL field shows `http://ai.sda.changan.com.cn/api/v1` as placeholder
+- New CaTianshu providers are created with this URL pre-filled
+- API requests automatically use Changan Tianshu endpoint unless user specifies otherwise
+- Users can still customize the base URL by typing a different value
+
+### Technical Notes
+
+**UI Behavior**:
+- The base URL input field in `components/model-config-dialog.tsx` (lines 1095-1119) already uses `PROVIDER_INFO[provider].defaultBaseUrl` as placeholder
+- When users create a new provider, `createProviderConfig()` (line 251) sets `baseUrl: PROVIDER_INFO[provider].defaultBaseUrl`
+- This means new CaTianshu providers will have the base URL already saved in localStorage
+
+**API Request Behavior**:
+- `lib/ai-providers.ts` receives `overrides.baseUrl` from the stored configuration
+- If the user clears the base URL field (empty string), the system falls back to the default
+- The `trim()` check ensures whitespace-only values are treated as empty
+- Environment variable `DEEPSEEK_BASE_URL` can still override the default for server-side deployments
+
+**Fallback Chain**:
+```
+User Input (UI) → Env Var → Default URL
+       ↓              ↓           ↓
+"custom.com"   DEEPSEEK_BASE_URL   "http://ai.sda.changan.com.cn/api/v1"
+```
+
+**Data Flow**:
+1. **Provider Creation**: User adds CaTianshu provider
+   - `createProviderConfig("deepseek")` sets `baseUrl: "http://ai.sda.changan.com.cn/api/v1"`
+   - Saved to localStorage
+2. **API Request**: User sends a chat message
+   - Frontend reads `baseUrl` from selected model config
+   - Sends to `/api/chat` as `overrides.baseUrl`
+   - Backend receives and uses in `getAIModel(overrides)`
+   - API call made to `http://ai.sda.changan.com.cn/api/v1/chat/completions`
+
+### Testing Recommendations
+
+1. **New Provider Creation**:
+   - Add a new CaTianshu provider
+   - Verify base URL field shows `http://ai.sda.changan.com.cn/api/v1` as placeholder
+   - Verify the field is pre-filled with this value (not just a placeholder)
+   - Save and verify the URL is stored in localStorage
+
+2. **API Request Testing**:
+   - Configure CaTianshu with valid API key
+   - Send a test message
+   - Check browser DevTools Network tab
+   - Verify request goes to `http://ai.sda.changan.com.cn/api/v1/chat/completions`
+
+3. **Custom Base URL**:
+   - Edit an existing CaTianshu provider
+   - Change base URL to a custom value (e.g., `https://custom.example.com`)
+   - Verify API requests use the custom URL instead
+
+4. **Empty Base URL Handling**:
+   - Edit a CaTianshu provider
+   - Clear the base URL field completely (empty string)
+   - Save the provider
+   - Verify API requests still use the default `http://ai.sda.changan.com.cn/api/v1`
+
+5. **Environment Variable Override**:
+   - Set `DEEPSEEK_BASE_URL=https://test.example.com` in `.env.local`
+   - Restart the dev server
+   - Create a new provider with empty base URL
+   - Verify requests use `https://test.example.com` instead of the default
+
+6. **Validation Test**:
+   - Configure CaTianshu provider with Changan API key
+   - Click the "测试" (Test) button
+   - Verify validation request uses `http://ai.sda.changan.com.cn/api/v1`
+   - Check that validation succeeds if credentials are correct
