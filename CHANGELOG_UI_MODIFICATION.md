@@ -409,3 +409,224 @@ User Input (UI) → Env Var → Default URL
    - Click the "测试" (Test) button
    - Verify validation request uses `http://ai.sda.changan.com.cn/api/v1`
    - Check that validation succeeds if credentials are correct
+
+---
+
+## Date: 2026-01-17 (Update 5)
+
+### Summary
+Migrated from Google Fonts to local font files to enable production builds in intranet environments without internet access. This change replaces `next/font/google` with `next/font/local` while maintaining identical CSS variable names and font rendering behavior.
+
+### Problem Statement
+The project failed to build with `npm run build` in intranet (offline) environments because Next.js could not fetch fonts from Google Fonts during the build process. The build errors occurred for both JetBrains Mono and Plus Jakarta Sans fonts:
+```
+Error: Turbopack build failed with 2 errors:
+Failed to fetch JetBrains Mono from Google Fonts.
+Failed to fetch Plus Jakarta Sans from Google Fonts.
+```
+
+### Solution
+Downloaded font files from Google Fonts and configured Next.js to use local fonts instead of remote fonts, ensuring builds work in offline environments.
+
+### Files Modified
+
+#### 7. `app/fonts.ts` (New File)
+
+**Location**: New file created in `app/` directory
+
+**Change Description**:
+- Created centralized font configuration file using `next/font/local`
+- Defines local font configurations for Plus Jakarta Sans and JetBrains Mono
+
+**Code Added**:
+```typescript
+import localFont from "next/font/local"
+
+export const plusJakarta = localFont({
+    src: "./fonts/PlusJakartaSans-VariableFont_wght.ttf",
+    variable: "--font-sans",
+    weight: "400 700",
+    display: "swap",
+})
+
+export const jetbrainsMono = localFont({
+    src: "./fonts/JetBrainsMono-VariableFont_wght.ttf",
+    variable: "--font-mono",
+    weight: "400 500",
+    display: "swap",
+})
+```
+
+**Impact**:
+- Exports font configurations using the same variable names as before (`plusJakarta`, `jetbrainsMono`)
+- Uses the same CSS variables (`--font-sans`, `--font-mono`) to ensure zero CSS changes needed
+- Specifies weight ranges that match the original Google Fonts configuration
+- Uses `display: "swap"` for optimal loading behavior (text remains visible during font loading)
+
+#### 8. `app/[lang]/layout.tsx`
+
+**Location**: Lines 1-11
+
+**Change Description**:
+- **Before**: Imported fonts from `next/font/google` and defined font configurations inline
+- **After**: Imports pre-configured fonts from local `@/app/fonts` module
+
+**Code Changes**:
+```typescript
+// Before (lines 3, 13-23):
+import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google"
+
+const plusJakarta = Plus_Jakarta_Sans({
+    variable: "--font-sans",
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700"],
+})
+
+const jetbrainsMono = JetBrains_Mono({
+    variable: "--font-mono",
+    subsets: ["latin"],
+    weight: ["400", "500"],
+})
+
+// After (line 9):
+import { jetbrainsMono, plusJakarta } from "@/app/fonts"
+```
+
+**Impact**:
+- Simplified the layout file by removing inline font configuration
+- Removed dependency on `next/font/google` and external Google Fonts CDN
+- Line 161 (`className={...}`) remains unchanged as variable names are identical
+
+### Font Files Added
+
+#### 9. `app/fonts/JetBrainsMono-VariableFont_wght.ttf`
+
+**Location**: New font file in `app/fonts/` directory
+
+**Change Description**:
+- Variable TrueType font supporting all weights from 100-900
+- Copied from Google Fonts download package
+- File size: ~189 KB
+- Supports the required weights: 400 (Regular), 500 (Medium)
+
+#### 10. `app/fonts/PlusJakartaSans-VariableFont_wght.ttf`
+
+**Location**: New font file in `app/fonts/` directory
+
+**Change Description**:
+- Variable TrueType font supporting all weights from 200-800
+- Copied from Google Fonts download package
+- File size: ~174 KB
+- Supports the required weights: 400 (Regular), 500 (Medium), 600 (SemiBold), 700 (Bold)
+
+### User Experience Changes
+
+**Before**:
+- Fonts loaded from Google Fonts CDN at runtime
+- Build process required internet access to fetch font metadata
+- Production build failed in offline/intranet environments
+
+**After**:
+- Fonts bundled with the application as static assets
+- Build process works completely offline
+- Identical font rendering (same fonts, same weights, same CSS variables)
+- No visual differences in the UI
+- Slightly larger initial bundle size (~363 KB for both fonts)
+
+### Technical Notes
+
+**Why Variable Fonts**:
+- Variable fonts contain all weight variations in a single file
+- More efficient than including separate files for each weight (400, 500, 600, 700)
+- Next.js `next/font/local` has excellent support for variable fonts
+- Reduces HTTP requests and total file size compared to multiple static font files
+
+**CSS Variables Unchanged**:
+- `--font-sans` (Plus Jakarta Sans) - used throughout the app via `font-sans` Tailwind class
+- `--font-mono` (JetBrains Mono) - used for code and monospace text via `font-mono` Tailwind class
+- `app/globals.css` lines 11-12 and line 214 remain unchanged
+- Tailwind v4 inline configuration in `globals.css` automatically picks up these variables
+
+**Build Behavior**:
+- `next/font/local` processes fonts at build time (not runtime)
+- Generates optimized font loading CSS
+- Creates font subsets automatically
+- No network requests needed during build
+- Font files are served as static assets from `.next/static/media/`
+
+**Weight Specification**:
+- Format: `"min max"` for variable fonts (e.g., `"400 700"`)
+- Tells Next.js which weight range to include in CSS `@font-face`
+- Does not restrict the actual weights available (variable fonts support all weights in their range)
+- Matches the original Google Fonts configuration weights
+
+### Performance Impact
+
+**Bundle Size**:
+- Added ~363 KB to the static assets (189 KB + 174 KB)
+- Fonts are loaded once and cached by browser
+- Eliminates external CDN dependency
+
+**Loading Speed**:
+- **Before**: Fonts loaded from Google Fonts CDN (external network request)
+- **After**: Fonts served from same origin (faster, more reliable)
+- No external DNS lookup or connection needed
+- Better performance in intranet environments
+
+**Build Time**:
+- **Before**: Build failed in offline environments
+- **After**: Build succeeds regardless of network connectivity
+- Minimal build time impact from local font processing
+
+### Testing Recommendations
+
+1. **Build Test**:
+   - Run `npm run build` in an offline environment
+   - Verify build completes without font fetch errors
+   - Check `.next/static/media/` for generated font files
+
+2. **Visual Regression**:
+   - Compare UI before and after in browser
+   - Verify font rendering is identical
+   - Test font weights: Regular (400), Medium (500), SemiBold (600), Bold (700)
+   - Check both light and dark themes
+
+3. **Performance**:
+   - Check Lighthouse score for font loading
+   - Verify `font-display: swap` behavior (text visible during load)
+   - Test on slow connections to ensure fonts load properly
+
+4. **Production Deployment**:
+   - Build and start production server: `npm run build && npm run start`
+   - Verify fonts load correctly on port 6001
+   - Check browser DevTools Network tab to confirm fonts served from local origin
+   - Test in multiple browsers (Chrome, Firefox, Safari, Edge)
+
+5. **Development Mode**:
+   - Verify `npm run dev` still works correctly
+   - Hot reload should preserve font configurations
+   - No console errors related to fonts
+
+### Migration Path for Other Deployments
+
+If you need to revert to Google Fonts or use a different font source:
+
+1. **Revert to Google Fonts**:
+   - Remove `app/fonts.ts`
+   - Restore original imports in `app/[lang]/layout.tsx`
+   - Remove font files from `app/fonts/`
+
+2. **Add More Weights**:
+   - Download additional static font files from Google Fonts
+   - Update `src` in `app/fonts.ts` to array of font files
+   - Adjust `weight` property to include new weight range
+
+3. **Add Italic Variants**:
+   - Copy italic variable font files to `app/fonts/`
+   - Update `src` property to include italic variants:
+   ```typescript
+   src: [
+       { path: "./fonts/Font-VariableFont_wght.ttf", style: "normal" },
+       { path: "./fonts/Font-Italic-VariableFont_wght.ttf", style: "italic" }
+   ]
+   ```
