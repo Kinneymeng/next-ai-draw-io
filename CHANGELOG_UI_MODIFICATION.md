@@ -630,3 +630,72 @@ If you need to revert to Google Fonts or use a different font source:
        { path: "./fonts/Font-Italic-VariableFont_wght.ttf", style: "italic" }
    ]
    ```
+
+---
+
+## Date: 2026-01-19 (Update 6)
+
+### Summary
+Fixed CaTianshu provider logo display in the model selector dropdown to show the Changan Automobile logo instead of the DeepSeek logo.
+
+### Files Modified
+
+#### 11. `components/ai-elements/model-selector.tsx`
+
+**Location**: Lines 131-143 (ModelSelectorLogo function)
+
+**Change Description**:
+- **Before**: Model selector dropdown displayed DeepSeek logo from external CDN (`https://models.dev/logos/deepseek.svg`)
+- **After**: Model selector dropdown now displays Changan Automobile logo from local asset (`/changan.png`)
+
+**Code Changes**:
+```typescript
+// Added at the beginning of ModelSelectorLogo function:
+// Use custom local logo for CaTianshu (deepseek)
+if (provider === "deepseek") {
+    return (
+        <img
+            {...props}
+            alt="CaTianshu logo"
+            className={cn("size-4", className)}
+            height={16}
+            src="/changan.png"
+            width={16}
+        />
+    )
+}
+```
+
+**Impact**:
+- The model selector dropdown (accessed by clicking the bot icon in chat input) now displays the correct Changan logo
+- Matches the logo implementation in `ProviderLogo` component (from Update 3)
+- Ensures consistent branding across all UI locations where the provider logo appears
+
+### User Experience Changes
+
+**Before**:
+- Configuration dialog showed Changan logo (correct)
+- Model selector dropdown showed DeepSeek logo (incorrect)
+
+**After**:
+- Both configuration dialog and model selector dropdown show Changan logo (consistent)
+
+### Technical Notes
+
+**Two Logo Components**:
+The codebase has two separate logo components that needed updating:
+1. `ProviderLogo` in `components/model-config-dialog.tsx` - ✅ Fixed in Update 3
+2. `ModelSelectorLogo` in `components/ai-elements/model-selector.tsx` - ✅ Fixed in this update
+
+**Styling Consistency**:
+- Uses same local asset: `/changan.png` (already added in Update 3)
+- Does NOT use `dark:invert` class (preserves original logo colors)
+- Same size: `size-4` (16x16px)
+
+### Testing Recommendations
+
+1. Click the bot icon at the bottom of chat input to open model selector dropdown
+2. Verify Changan logo appears next to "deepseek-reasoner" model
+3. Test in both light and dark modes
+4. Verify logo matches the one shown in the configuration dialog
+5. Clear browser cache to ensure new logo is loaded
