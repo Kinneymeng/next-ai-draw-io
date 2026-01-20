@@ -699,3 +699,110 @@ The codebase has two separate logo components that needed updating:
 3. Test in both light and dark modes
 4. Verify logo matches the one shown in the configuration dialog
 5. Clear browser cache to ensure new logo is loaded
+
+---
+
+## Date: 2026-01-20 (Update 7)
+
+### Summary
+Removed the "AWS架构" (AWS Architecture) quick example from the main UI to simplify the example panel.
+
+### Files Modified
+
+#### 12. `components/chat-example-panel.tsx`
+
+**Location**: Lines 92-105, 188-193
+
+**Change Description**:
+- **Before**: The quick examples section showed 5 examples including "AWS架构" (AWS Architecture)
+- **After**: The AWS Architecture example is now hidden/commented out
+
+**Code Changes**:
+```typescript
+// Lines 92-105 - Handler function commented out:
+// AWS Architecture handler removed per user request
+// const handleReplicateArchitecture = async () => {
+//     setInput("Replicate this in aws style")
+//     try {
+//         const response = await fetch(getAssetUrl("/architecture.png"))
+//         const blob = await response.blob()
+//         const file = new File([blob], "architecture.png", {
+//             type: "image/png",
+//         })
+//         setFiles([file])
+//     } catch (error) {
+//         console.error(dict.errors.failedToLoadExample, error)
+//     }
+// }
+
+// Lines 188-193 - ExampleCard component commented out:
+{/* AWS Architecture example removed per user request */}
+{/* <ExampleCard
+    icon={<Cloud className="w-4 h-4 text-primary" />}
+    title={dict.examples.awsArchitecture}
+    description={dict.examples.awsDescription}
+    onClick={handleReplicateArchitecture}
+/> */}
+```
+
+**Impact**:
+- The quick examples section now shows 4 examples instead of 5:
+  1. 文档转图表 (Paper to Diagram)
+  2. 动画图表 (Animated Diagram)
+  3. 复制流程图 (Replicate Flowchart)
+  4. 创意绘图 (Creative Drawing)
+- The AWS Architecture example is completely hidden from the UI
+- The example used the Cloud icon from lucide-react (imported but no longer used)
+- The handler function that loads `/architecture.png` is commented out but can be easily restored if needed
+
+### User Experience Changes
+
+**Before**:
+- Users saw 5 quick example options when starting a new chat
+- AWS Architecture example was positioned third in the list
+- Clicking it would load an architecture diagram image and prompt the AI to replicate it in AWS style
+
+**After**:
+- Users see 4 quick example options
+- AWS Architecture example is no longer visible
+- The example panel appears cleaner and more focused on general use cases
+
+### Technical Notes
+
+**Implementation Approach**:
+- Used code comments (`// ...` and `{/* ... */}`) to hide the example instead of deleting it
+- This makes it easy to restore the feature in the future if needed
+- Both the handler function and UI component are commented out for consistency
+
+**Related Files Not Modified**:
+- `lib/i18n/dictionaries/*.json` - Translation strings for AWS example remain in place
+- `public/architecture.png` - Example image file remains in the repository
+- These can be safely left as-is or removed in a future cleanup
+
+**Remaining Examples**:
+All remaining examples continue to work normally:
+- Paper/document to diagram conversion (uses `/example.png` and `/chain-of-thought.txt`)
+- Animated connector diagrams (text-only prompt)
+- Flowchart replication (uses `/example.png`)
+- Creative drawing (text-only prompt)
+
+### Testing Recommendations
+
+1. **Visual Verification**:
+   - Run `npm run dev` and open the application
+   - Start a new chat (or clear existing chat)
+   - Verify the quick examples section shows only 4 cards
+   - Confirm AWS Architecture example is not visible
+
+2. **Remaining Examples**:
+   - Test each of the 4 remaining examples to ensure they still work
+   - Verify file uploads work correctly for document/flowchart examples
+   - Verify text-only prompts work for animated and creative examples
+
+3. **Responsive Layout**:
+   - Check that the example grid layout still looks good with 4 items instead of 5
+   - Test on different screen sizes (mobile, tablet, desktop)
+
+4. **i18n Support**:
+   - Test in all supported languages (zh, en, ja) to ensure no broken references
+   - The translation strings remain but are unused (safe)
