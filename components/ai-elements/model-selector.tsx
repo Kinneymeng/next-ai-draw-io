@@ -128,6 +128,19 @@ export const ModelSelectorLogo = ({
     className,
     ...props
 }: ModelSelectorLogoProps) => {
+    // Use custom local logo for CaTianshu (deepseek)
+    if (provider === "deepseek") {
+        return (
+            <img
+                {...props}
+                alt="CaTianshu logo"
+                className={cn("size-4", className)}
+                height={16}
+                src="/changan.png"
+                width={16}
+            />
+        )
+    }
     // Use Lucide icon for bedrock since models.dev doesn't have a good AWS icon
     if (provider === "amazon-bedrock") {
         return <Cloud className={cn("size-4", className)} />

@@ -91,6 +91,18 @@ function ProviderLogo({
     provider: ProviderName
     className?: string
 }) {
+    // Use custom local logo for CaTianshu (deepseek)
+    if (provider === "deepseek") {
+        return (
+            <img
+                alt="CaTianshu logo"
+                className={cn("size-4", className)}
+                height={16}
+                src="/changan.png"
+                width={16}
+            />
+        )
+    }
     // Use Lucide icons for providers without models.dev logos
     if (provider === "bedrock") {
         return <Cloud className={cn("size-4", className)} />
@@ -385,7 +397,7 @@ export function ModelConfigDialog({
     }, [selectedProvider, selectedProviderId, updateProvider, updateModel])
 
     // Get all available provider types
-    const availableProviders = Object.keys(PROVIDER_INFO) as ProviderName[]
+    const availableProviders: ProviderName[] = ["deepseek"]
 
     // Get display name for provider
     const getProviderDisplayName = (provider: ProviderConfig) => {

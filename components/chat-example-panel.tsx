@@ -91,20 +91,21 @@ export default function ExamplePanel({
         }
     }
 
-    const handleReplicateArchitecture = async () => {
-        setInput("Replicate this in aws style")
-
-        try {
-            const response = await fetch(getAssetUrl("/architecture.png"))
-            const blob = await response.blob()
-            const file = new File([blob], "architecture.png", {
-                type: "image/png",
-            })
-            setFiles([file])
-        } catch (error) {
-            console.error(dict.errors.failedToLoadExample, error)
-        }
-    }
+    // AWS Architecture handler removed per user request
+    // const handleReplicateArchitecture = async () => {
+    //     setInput("Replicate this in aws style")
+    //
+    //     try {
+    //         const response = await fetch(getAssetUrl("/architecture.png"))
+    //         const blob = await response.blob()
+    //         const file = new File([blob], "architecture.png", {
+    //             type: "image/png",
+    //         })
+    //         setFiles([file])
+    //     } catch (error) {
+    //         console.error(dict.errors.failedToLoadExample, error)
+    //     }
+    // }
 
     const handlePdfExample = async () => {
         setInput("Summarize this paper as a diagram")
@@ -193,12 +194,13 @@ export default function ExamplePanel({
                         }}
                     />
 
-                    <ExampleCard
+                    {/* AWS Architecture example removed per user request */}
+                    {/* <ExampleCard
                         icon={<Cloud className="w-4 h-4 text-primary" />}
                         title={dict.examples.awsArchitecture}
                         description={dict.examples.awsDescription}
                         onClick={handleReplicateArchitecture}
-                    />
+                    /> */}
 
                     <ExampleCard
                         icon={<GitBranch className="w-4 h-4 text-primary" />}

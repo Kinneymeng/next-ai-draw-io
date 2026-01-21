@@ -97,7 +97,10 @@ export const PROVIDER_INFO: Record<
         defaultBaseUrl: "http://localhost:11434",
     },
     openrouter: { label: "OpenRouter" },
-    deepseek: { label: "DeepSeek" },
+    deepseek: {
+        label: "CaTianshu",
+        defaultBaseUrl: "http://ai.sda.changan.com.cn/api/v1",
+    },
     siliconflow: {
         label: "SiliconFlow",
         defaultBaseUrl: "https://api.siliconflow.cn/v1",

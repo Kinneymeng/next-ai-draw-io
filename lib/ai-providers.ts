@@ -872,20 +872,16 @@ export function getAIModel(overrides?: ClientOverrides): ModelConfig {
                 overrides,
                 "DEEPSEEK_BASE_URL",
             )
-            const baseURL = resolveBaseURL(
-                overrides?.apiKey,
-                overrides?.baseUrl,
-                serverBaseUrl,
-            )
-            if (baseURL || overrides?.apiKey) {
-                const customDeepSeek = createDeepSeek({
-                    apiKey,
-                    ...(baseURL && { baseURL }),
-                })
-                model = customDeepSeek(modelId)
-            } else {
-                model = deepseek(modelId)
-            }
+            // Use default baseURL if not provided or empty
+            const baseURL =
+                (overrides?.baseUrl && overrides.baseUrl.trim()) ||
+                serverBaseUrl ||
+                "http://ai.sda.changan.com.cn/api/v1"
+            const customDeepSeek = createDeepSeek({
+                apiKey,
+                baseURL,
+            })
+            model = customDeepSeek(modelId)
             break
         }
 
